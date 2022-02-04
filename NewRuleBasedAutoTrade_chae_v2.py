@@ -28,12 +28,9 @@ def get_current_price(ticker):
 upbit = pyupbit.Upbit(access, secret)
 print("autotrade start")
 
-# Data Loading
-df_X = pyupbit.get_ohlcv("KRW-HUNT", interval="minute60", count = 50)
-ticker_X = "KRW-HUNT"
-df_S = pyupbit.get_ohlcv("KRW-STRK", interval="minute60", count = 50)
-ticker_S = "KRW-STRK"
 # Initial flag setting
+ticker_X = "KRW-HUNT"
+ticker_S = "KRW-STRK"
 state_X = 0
 state_S = 0 
 buy_price_X = 0
@@ -59,6 +56,7 @@ while True:
         current_price_X = get_current_price(ticker_X)
         current_price_S = get_current_price(ticker_S)
 
+        # Data Loading
         df_X = pyupbit.get_ohlcv("KRW-HUNT", interval="minute60", count = 30)
         df_S = pyupbit.get_ohlcv("KRW-STRK", interval="minute60", count = 30)
         # Mean Price 
@@ -99,38 +97,22 @@ while True:
         # Buy Strategy - STRK
         if (state_S == 0):
             if (current_price_S < low_mean_S and current_price_S > high_min_S):
-                if (state_X == 0):
-                    krw = 0.5*(get_balance("KRW"))
-                    if krw > 5000:
-                        upbit.buy_market_order(ticker_S, krw*0.9995)
-                        state_S = 1
-                    buy_price_S = current_price_S
-                    kkk_S = 0
-                else:
-                    krw = (get_balance("KRW"))
-                    if krw > 5000:
-                        upbit.buy_market_order(ticker_S, krw*0.9995)
-                        state_S = 1
-                    buy_price_S = current_price_S
-                    kkk_S = 0
+                krw = (get_balance("KRW"))
+                if krw > 5000:
+                    upbit.buy_market_order(ticker_S, krw*0.9995)
+                    state_S = 1
+                buy_price_S = current_price_S
+                kkk_S = 0
 
-        # Buy Strategy - XRP
+        # Buy Strategy - HUNT
         if (state_X == 0):
             if (current_price_X < low_mean_X and current_price_X > high_min_X):
-                if (state_S == 0):
-                    krw = 0.5*(get_balance("KRW"))
-                    if krw > 5000:
-                        upbit.buy_market_order(ticker_X, krw*0.9995)
-                        state_X = 1
-                    buy_price_X = current_price_X
-                    kkk_X = 0
-                else:
-                    krw = (get_balance("KRW"))
-                    if krw > 5000:
-                        upbit.buy_market_order(ticker_X, krw*0.9995)
-                        state_X = 1
-                    buy_price_X = current_price_X
-                    kkk_X = 0
+                krw = (get_balance("KRW"))
+                if krw > 5000:
+                    upbit.buy_market_order(ticker_X, krw*0.9995)
+                    state_X = 1
+                buy_price_X = current_price_X
+                kkk_X = 0
 
         # Sell Strategy - STRK
         if (state_S == 1):
