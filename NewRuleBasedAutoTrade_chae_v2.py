@@ -59,12 +59,15 @@ while True:
         current_price_X = get_current_price(ticker_X)
         current_price_S = get_current_price(ticker_S)
 
+        df_X = pyupbit.get_ohlcv("KRW-HUNT", interval="minute60", count = 30)
+        df_S = pyupbit.get_ohlcv("KRW-STRK", interval="minute60", count = 30)
         # Mean Price 
         low_1_X = float(df_X['low'][-2:-1])
         low_2_X = float(df_X['low'][-3:-2])
         low_3_X = float(df_X['low'][-4:-3])
         low_mean_X = (low_1_X + low_2_X + low_3_X)/3
 
+        
         low_1_S = float(df_S['low'][-2:-1])
         low_2_S = float(df_S['low'][-3:-2])
         low_3_S = float(df_S['low'][-4:-3])
