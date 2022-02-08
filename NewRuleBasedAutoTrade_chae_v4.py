@@ -77,17 +77,17 @@ def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio):
                 hhh = 0
                 net_ratio = 100*(current_price - buy_price_origin)/buy_price_origin
                 if (net_ratio >= 1):
-                    ratio = ratio + 0.2
+                    ratio = ratio + 0.3
                 elif (net_ratio >= 0.5 and net_ratio < 1):
-                    ratio = ratio + 0.1
+                    ratio = ratio + 0.2
                 elif (net_ratio >= 0 and net_ratio < 0.5):
-                    ratio = ratio + 0
+                    ratio = ratio + 0.1
                 elif (net_ratio >= -0.5 and net_ratio < 0):
                     ratio = ratio - 0.1
                 elif (net_ratio >= -1.5 and net_ratio < -0.5):
-                    ratio = ratio - 0.2
+                    ratio = ratio - 0.3
                 else:
-                    ratio = ratio - 0.4
+                    ratio = ratio - 0.5
             elif (current_price <= lower_price):
                 buy_price = current_price
                 state = 1
@@ -96,7 +96,7 @@ def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio):
             state = 1
             kkk = 360
         
-        if (current_price < low_min):
+        if (current_price < low_min or 100*(current_price - buy_price_origin)/buy_price_origin < -5):
             btc = get_balance(tic)
             if btc > 0:
                 upbit.sell_market_order(ticker, btc*0.9995)
@@ -105,19 +105,20 @@ def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio):
             hhh = 0
             net_ratio = 100*(current_price - buy_price_origin)/buy_price_origin
             if (net_ratio >= 1):
-                ratio = ratio + 0.2
+                ratio = ratio + 0.3
             elif (net_ratio >= 0.5 and net_ratio < 1):
-                ratio = ratio + 0.1
+                ratio = ratio + 0.2
             elif (net_ratio >= 0 and net_ratio < 0.5):
-                ratio = ratio + 0
+                ratio = ratio + 0.1
             elif (net_ratio >= -0.5 and net_ratio < 0):
                 ratio = ratio - 0.1
             elif (net_ratio >= -1.5 and net_ratio < -0.5):
-                ratio = ratio - 0.2
+                ratio = ratio - 0.3
             else:
-                ratio = ratio - 0.4
+                ratio = ratio - 0.5
 
-    ratio = max(0.0, min(0.9, ratio))
+    ratio = max(0.0, min(1.0, ratio))
+    ratio = round(ratio, 1)
 
     return kkk, hhh, state, buy_price, current_price, low_mean, high_min, low_min, buy_price_origin, ratio 
 
@@ -127,8 +128,8 @@ print("autotrade start")
 
 # Initial flag setting
 coin_num = 15
-ticker_list = ["KRW-BTC", "KRW-ETH", "KRW-STRK", "KRW-HUNT", "KRW-JST", "KRW-BORA", "KRW-XRP", "KRW-SAND", "KRW-SOL", "KRW-ONT", "KRW-LSK", "KRW-MANA", "KRW-NEAR", "KRW-AXS", "KRW-GAS"]
-tic_list = ["BTC", "ETH", "STRK", "HUNT", "JST", "BORA", "XRP", "SAND", "SOL", "ONT", "LSK", "MANA", "NEAR", "AXS", "GAS"]
+ticker_list = ["KRW-HUNT", "KRW-XRP", "KRW-BORA", "KRW-ADA", "KRW-PLA"]
+tic_list = ["HUNT", "XRP", "BORA", "ADA", "PLA"]
 ratio = 0.5*np.ones(coin_num)
 state = np.zeros(coin_num)
 buy_price = np.zeros(coin_num)
@@ -147,11 +148,7 @@ minute_pre = now.minute
 hour_pre = now.hour
 
 # Self Setting
-ratio[4] = 0.1
-state[0] = 1
-kkk[0] = 253
-buy_price[0] = 50984000.0
-buy_price_origin[0] = 50984000.0
+
 # Autotrading Start
 while True:
     try:
