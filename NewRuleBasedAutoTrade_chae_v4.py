@@ -127,7 +127,7 @@ upbit = pyupbit.Upbit(access, secret)
 print("autotrade start")
 
 # Initial flag setting
-coin_num = 15
+coin_num = 5
 ticker_list = ["KRW-HUNT", "KRW-XRP", "KRW-BORA", "KRW-ADA", "KRW-PLA"]
 tic_list = ["HUNT", "XRP", "BORA", "ADA", "PLA"]
 ratio = 0.5*np.ones(coin_num)
