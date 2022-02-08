@@ -154,7 +154,7 @@ print(now.hour, now.minute, 30%24)
 
 minute_pre = now.minute
 hour_pre = now.hour
-update_1hour = 0
+update_flag = 0
 # Self Setting
 
 # Autotrading Start
@@ -171,14 +171,14 @@ while True:
             for i in range(1,coin_num+1):
                 hhh[i-1] = hhh[i-1] + 1
 
-        if (now.minute <= 3 and update_1hour == 0):
+        if (now.minute <= 3 and update_flag == 0):
             for i in range(1,coin_num+1):
                 low_mean[i-1], high_min[i-1], low_min[i-1], low_1[i-1], low_2[i-1], low_3[i-1] = update_1hour(ticker_list[i-1])
-            update_1hour = 1
-        elif (now.minute <= 3 and update_1hour == 1):
-            update_1hour = 1
+            update_flag = 1
+        elif (now.minute <= 3 and update_flag == 1):
+            update_flag = 1
         else:
-            update_1hour = 0
+            update_flag = 0
 
            
         for i in range(1,coin_num+1):
