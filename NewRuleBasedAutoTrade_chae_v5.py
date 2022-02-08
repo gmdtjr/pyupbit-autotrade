@@ -25,9 +25,7 @@ def get_current_price(ticker):
     #"""Current Price Check"""
     return pyupbit.get_orderbook(ticker=ticker)["orderbook_units"][0]["ask_price"]
 
-def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio):
-
-    current_price = get_current_price(ticker)
+def update_1hour(ticker):
 
     # Data Loading
     df = pyupbit.get_ohlcv(ticker, interval="minute60", count = 25)
@@ -48,10 +46,17 @@ def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio):
         low_temp = float(df['low'][-1+i:0+i])
         if (low_min > low_temp):
             low_min = low_temp        
+
+    return low_mean, high_min, low_min, low_1, low_2, low_3
      
+
+def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio, low_mean, high_min, low_min, low_1, low_2, low_3):
+
+    current_price = get_current_price(ticker)
+    
     # Buy Strategy
     if (state == 0 and hhh >= 1):
-        if (current_price < low_1 and current_price < low_mean and current_price > high_min):
+        if (current_price < low_mean and current_price > high_min and low_1 > max(low_2, low_3)):
             krw = (get_balance("KRW"))
             krw = ratio*krw
             if krw > 5000:
@@ -104,15 +109,15 @@ def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio):
             kkk = 0
             hhh = 0
             net_ratio = 100*(current_price - buy_price_origin)/buy_price_origin
-            if (net_ratio >= 1):
+            if (net_ratio > 1):
                 ratio = ratio + 0.3
-            elif (net_ratio >= 0.5 and net_ratio < 1):
+            elif (net_ratio > 0.5 and net_ratio <= 1):
                 ratio = ratio + 0.2
-            elif (net_ratio >= 0 and net_ratio < 0.5):
+            elif (net_ratio > 0 and net_ratio <= 0.5):
                 ratio = ratio + 0.1
-            elif (net_ratio >= -0.5 and net_ratio < 0):
+            elif (net_ratio > -0.5 and net_ratio <= 0):
                 ratio = ratio - 0.1
-            elif (net_ratio >= -1.5 and net_ratio < -0.5):
+            elif (net_ratio > -1.5 and net_ratio <= -0.5):
                 ratio = ratio - 0.3
             else:
                 ratio = ratio - 0.5
@@ -120,7 +125,7 @@ def strategy(ticker, tic, kkk, hhh, state, buy_price, buy_price_origin, ratio):
     ratio = max(0.0, min(1.0, ratio))
     ratio = round(ratio, 1)
 
-    return kkk, hhh, state, buy_price, current_price, low_mean, high_min, low_min, buy_price_origin, ratio 
+    return kkk, hhh, state, buy_price, current_price, buy_price_origin, ratio 
 
 # Log-In
 upbit = pyupbit.Upbit(access, secret)
@@ -130,7 +135,7 @@ print("autotrade start")
 coin_num = 5
 ticker_list = ["KRW-HUNT", "KRW-XRP", "KRW-BORA", "KRW-ADA", "KRW-PLA"]
 tic_list = ["HUNT", "XRP", "BORA", "ADA", "PLA"]
-ratio = 0.1*np.ones(coin_num)
+ratio = np.zeros(coin_num)
 state = np.zeros(coin_num)
 buy_price = np.zeros(coin_num)
 buy_price_origin = np.zeros(coin_num)
@@ -140,13 +145,16 @@ low_mean = np.zeros(coin_num)
 high_min = np.zeros(coin_num)
 low_min = np.zeros(coin_num)
 hhh = np.zeros(coin_num)
+low_1 = np.zeros(coin_num)
+low_2 = np.zeros(coin_num)
+low_3 = np.zeros(coin_num)
 
 now = datetime.datetime.now()
 print(now.hour, now.minute, 30%24)
 
 minute_pre = now.minute
 hour_pre = now.hour
-
+update_1hour = 0
 # Self Setting
 
 # Autotrading Start
@@ -162,9 +170,19 @@ while True:
         if (now.hour != hour_pre):
             for i in range(1,coin_num+1):
                 hhh[i-1] = hhh[i-1] + 1
+
+        if (now.minute <= 3 and update_1hour == 0):
+            for i in range(1,coin_num+1):
+                low_mean[i-1], high_min[i-1], low_min[i-1], low_1[i-1], low_2[i-1], low_3[i-1] = update_1hour(ticker_list[i-1])
+            update_1hour = 1
+        elif (now.minute <= 3 and update_1hour == 1):
+            update_1hour = 1
+        else:
+            update_1hour = 0
+
            
         for i in range(1,coin_num+1):
-            kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], current_price[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], buy_price_origin[i-1], ratio[i-1] = strategy(ticker_list[i-1], tic_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], ratio[i-1])
+            kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], current_price[i-1], buy_price_origin[i-1], ratio[i-1] = strategy(ticker_list[i-1], tic_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], ratio[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], low_1[i-1], low_2[i-1], low_3[i-1])
 
         minute_pre = now.minute
         hour_pre = now.hour
