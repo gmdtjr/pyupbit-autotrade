@@ -124,7 +124,11 @@ print(now.hour, now.minute, 30%24)
 minute_pre = now.minute
 hour_pre = now.hour
 update_flag = 0
+
 # Self Setting
+state[0] = 1
+buy_price[0] = 919
+kkk[0] = 129
 
 # Autotrading Start
 while True:
