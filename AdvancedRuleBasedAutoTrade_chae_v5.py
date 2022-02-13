@@ -75,7 +75,7 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min):
             percent = 0.01 - 0.01*(kkk/360)
             lower_price = buy_price*(1-percent)
             if (current_price >= target_price): 
-                btc = get_balance(ticker)
+                btc = get_balance(ticker[4:])
                 if btc > 0:
                     upbit.sell_market_order(ticker, btc*0.9995)
                 state = 0
@@ -90,7 +90,7 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min):
             kkk = 360
         
         if (current_price < low_min):
-            btc = get_balance(ticker)
+            btc = get_balance(ticker[4:])
             if btc > 0:
                 upbit.sell_market_order(ticker, btc*0.9995)
             state = 0
@@ -139,6 +139,7 @@ while True:
             low_min = np.zeros(coin_num)
             hhh = np.zeros(coin_num)
             ini_flag = 1
+            print("Initializing: ", now.hour,'/',now.minute,'/',now.second)
 
         # Time Update
         now = datetime.datetime.now()
@@ -175,10 +176,8 @@ while True:
             state_sum = state_sum + state[i-1]
         
         # Print
-        print("autotrade running")
-        print(now.hour,'/',now.minute,'/',now.second)
-        print('state sum:', state_sum)
-        print('coin num:', coin_num)
+        print("autotrade running: ", now.hour,'/',now.minute,'/',now.second)
+        print('state sum:', state_sum, '/ coin num:', coin_num)
         
         #for i in range(1,coin_num+1):
             #print(tic_list[i-1],'-','st:',state[i-1],'/k:',kkk[i-1],'/bp:',buy_price[i-1],'/cp:',current_price[i-1],'/mp:',round(low_mean[i-1],1),'/hp:',high_min[i-1],'/lp:',low_min[i-1])
