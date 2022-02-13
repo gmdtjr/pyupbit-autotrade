@@ -7,8 +7,11 @@ import schedule
 import numpy as np
 import math
 
-access = "ErGOGkF8IxVzxyVQNTwVJ0dyAkElQKrB9aT6Hfle"          
-secret = "uK8ZXHoUkXmiKEXxZ8YlHm7IeNfKRwml4i6NrPs8"          
+access = "ErGOGkF8IxVzxyVQNTwVJ0dyAkElQKrB9aT6Hfle"  
+secret = "uK8ZXHoUkXmiKEXxZ8YlHm7IeNfKRwml4i6NrPs8"
+
+#access = "aANC2LRKDxOqlnyQAPq7NINZnhzvCjxYVB2kftwz"
+#secret = "5gEleeeLvZtvq9o3VkjY17rnJJpvYnrZkBB7jRJ7"      
 
 def get_balance(ticker):
     #"""Balance Chech"""
@@ -47,10 +50,10 @@ def update_1hour(ticker):
         if (low_min > low_temp):
             low_min = low_temp        
 
-    return low_mean, high_min, low_min, low_1, low_2, low_3
+    return low_mean, high_min, low_min
      
 
-def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, low_1, low_2, low_3):
+def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min):
 
     current_price = get_current_price(ticker)
     
@@ -94,6 +97,7 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, lo
             kkk = 0
             hhh = 0
 
+    #print(ticker, ':', get_balance(ticker))
     return kkk, hhh, state, buy_price, current_price
 
 # Log-In
@@ -108,35 +112,33 @@ print(now.hour, now.minute, 30%24)
 
 minute_pre = now.minute
 hour_pre = now.hour
+day_pre = now.day
 update_flag = 0
-
+ini_flag = 0
 # Self Setting
 
 # Autotrading Start
 while True:
     try:
         # Initialize
-        if (state_sum == 0):
+        if (state_sum == 0 and ini_flag == 0):
             coin_list = pyupbit.get_tickers(fiat="KRW")
             coin_list_valid = []
             for i in range(1,len(coin_list)):
                 df_m = pyupbit.get_ohlcv(coin_list[i-1], interval="day", count = 1)
-                if (float(df_m['value'])/(24*60) > 1000000):
+                if (float(df_m['value'])/(24*60) > 1000000 and float(df_m['close']) > 100):
                     coin_list_valid.append(coin_list[i-1])
             coin_num = len(coin_list_valid)
             ticker_list = coin_list_valid
             state = np.zeros(coin_num)
             buy_price = np.zeros(coin_num)
-            buy_price_origin = np.zeros(coin_num)
             kkk = np.zeros(coin_num)
             current_price = np.zeros(coin_num)
             low_mean = np.zeros(coin_num)
             high_min = np.zeros(coin_num)
             low_min = np.zeros(coin_num)
             hhh = np.zeros(coin_num)
-            low_1 = np.zeros(coin_num)
-            low_2 = np.zeros(coin_num)
-            low_3 = np.zeros(coin_num)
+            ini_flag = 1
 
         # Time Update
         now = datetime.datetime.now()
@@ -148,10 +150,12 @@ while True:
         if (now.hour != hour_pre):
             for i in range(1,coin_num+1):
                 hhh[i-1] = hhh[i-1] + 1
+        if (now.day != day_pre):
+            ini_flag = 0
 
         if (now.minute <= 30 and update_flag == 0):
             for i in range(1,coin_num+1):
-                low_mean[i-1], high_min[i-1], low_min[i-1], low_1[i-1], low_2[i-1], low_3[i-1] = update_1hour(ticker_list[i-1])
+                low_mean[i-1], high_min[i-1], low_min[i-1] = update_1hour(ticker_list[i-1])
             update_flag = 1
         elif (now.minute <= 30 and update_flag == 1):
             update_flag = 1
@@ -160,19 +164,22 @@ while True:
 
            
         for i in range(1,coin_num+1):
-            kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], current_price[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], low_1[i-1], low_2[i-1], low_3[i-1])
+            kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], current_price[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], low_mean[i-1], high_min[i-1], low_min[i-1])
 
         minute_pre = now.minute
         hour_pre = now.hour
+        day_pre = now.day
         
         state_sum = 0
         for i in range(1,coin_num+1):
             state_sum = state_sum + state[i-1]
         
         # Print
+        print("autotrade running")
         print(now.hour,'/',now.minute,'/',now.second)
         print('state sum:', state_sum)
         print('coin num:', coin_num)
+        
         #for i in range(1,coin_num+1):
             #print(tic_list[i-1],'-','st:',state[i-1],'/k:',kkk[i-1],'/bp:',buy_price[i-1],'/cp:',current_price[i-1],'/mp:',round(low_mean[i-1],1),'/hp:',high_min[i-1],'/lp:',low_min[i-1])
             
