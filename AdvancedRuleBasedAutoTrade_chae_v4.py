@@ -56,7 +56,7 @@ def strategy(ticker, tic, kkk, hhh, state, buy_price, low_mean, high_min, low_mi
     
     # Buy Strategy
     if (state == 0 and hhh >= 1):
-        if (current_price < low_mean and current_price > high_min and low_1 > max(low_2, low_3)):
+        if (current_price < low_mean and current_price > high_min):
             krw = 10000
             if krw > 5000:
                 upbit.buy_market_order(ticker, krw*0.9995)
@@ -102,9 +102,9 @@ upbit = pyupbit.Upbit(access, secret)
 print("autotrade start")
 
 # Initial flag setting
-coin_num = 15
-ticker_list = ["KRW-BTC", "KRW-XRP", "KRW-SAND", "KRW-ETH", "KRW-THETA", "KRW-BORA", "KRW-ETC", "KRW-FLOW", "KRW-MANA", "KRW-WEMIX", "KRW-AXS", "KRW-MATIC", "KRW-TFUEL", "KRW-WAVES", "KRW-SOL"]
-tic_list = ["BTC", "XRP", "SAND", "ETH", "THETA", "BORA", "ETC", "FLOW", "MANA", "WEMIX", "AXS", "MATIC", "TFUEL", "WAVES", "SOL"]
+coin_num = 22
+ticker_list = ["KRW-BTC", "KRW-XRP", "KRW-SAND", "KRW-ETH", "KRW-THETA", "KRW-BORA", "KRW-ETC", "KRW-FLOW", "KRW-MANA", "KRW-WEMIX", "KRW-AXS", "KRW-MATIC", "KRW-TFUEL", "KRW-WAVES", "KRW-SOL", "KRW-DOGE", "KRW-PUNDIX", "KRW-NU", "KRW-AVAX", "KRW-PLA", "KRW-EOS", "KRW-SXP"]
+tic_list = ["BTC", "XRP", "SAND", "ETH", "THETA", "BORA", "ETC", "FLOW", "MANA", "WEMIX", "AXS", "MATIC", "TFUEL", "WAVES", "SOL", "DOGE", "PUNDIX", "NU", "AVAX", "PLA", "EOS", "SXP"]
 state = np.zeros(coin_num)
 buy_price = np.zeros(coin_num)
 buy_price_origin = np.zeros(coin_num)
