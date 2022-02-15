@@ -133,6 +133,7 @@ state_sum = 0
 update_flag = 0
 ini_flag = 0
 
+print("Sim Start")
 # Autotrading Start
 while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
 
@@ -224,7 +225,6 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
     hour_pre = now.hour
     day_pre = now.day
 
-    print(load_day)
     now.minute = now.minute + minute_interval
 
     if (now.minute >= 60):
