@@ -133,8 +133,8 @@ state_sum = 0
 update_flag = 0
 ini_flag = 0
 
-print("Sim Start")
 # Autotrading Start
+print("Sim Start")
 while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
 
     if (now.month <= 9):
@@ -170,7 +170,6 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
         for i in range(1,len(coin_list)):
 
             for j in range(1,5):
-                time.sleep(0.1)
                 df_m = pyupbit.get_ohlcv(coin_list[i-1], interval="day", count = 2, to = load_day)
                 if (not df_m is None):
                     break
@@ -207,7 +206,6 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
 
     if (now.minute <= 30 and update_flag == 0):
         for i in range(1,coin_num+1):
-            time.sleep(0.1)
             low_mean[i-1], high_min[i-1], low_min[i-1] = update_1hour(ticker_list[i-1], load_day)
         update_flag = 1
     elif (now.minute <= 30 and update_flag == 1):
@@ -226,7 +224,6 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
     day_pre = now.day
 
     now.minute = now.minute + minute_interval
-
     if (now.minute >= 60):
         now.minute = 0
         now.hour = now.hour + 1
