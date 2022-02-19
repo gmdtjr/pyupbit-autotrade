@@ -68,6 +68,14 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, lo
     # Buy Strategy
     if (state == 0 and hhh >= 1):
         if (current_price < low_mean and current_price > high_min):
+            if cash > 105000:
+                krw = 100000
+                btc = btc + (0.9995*krw/current_price) 
+                cash = cash - krw
+            elif cash <= 105000 and cash > 10000:
+                krw = cash
+                btc = btc + (0.9995*krw/current_price) 
+                cash = cash - krw
             state = 1
             buy_price = current_price
             buy_price_origin = current_price
@@ -81,6 +89,8 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, lo
             percent = 0.01 - 0.01*(kkk/360)
             lower_price = buy_price*(1-percent)
             if (current_price >= target_price): 
+                cash = cash + (0.9995*btc*current_price) 
+                btc = 0
                 state = 0
                 kkk = 0
                 hhh = 0
@@ -93,6 +103,8 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, lo
             kkk = 360
         
         if (current_price < low_min):
+            cash = cash + (0.9995*btc*current_price) 
+            btc = 0
             state = 0
             kkk = 0
             hhh = 0
@@ -133,7 +145,7 @@ minute_pre = now.minute
 hour_pre = now.hour
 day_pre = now.day
 
-cash = 2000000
+cash = 10000000
 state_sum = 0
 update_flag = 0
 ini_flag = 0
