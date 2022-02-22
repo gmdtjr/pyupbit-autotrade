@@ -61,19 +61,14 @@ def update_1hour(ticker, load_day):
     return low_mean, high_min, low_min
      
 
-def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, load_day, cash, btc, buy_price_origin, rate, rate_sum, state_sum):
+def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, load_day, cash, btc, buy_price_origin, buy_state):
 
     current_price = get_current_price(ticker, load_day)
     
     # Buy Strategy
     if (state == 0 and hhh >= 1):
         if (current_price < low_mean and current_price > high_min):
-            if (state_sum >= 6 and rate_sum <= -1*(state_sum/2)):
-                state = 1
-                buy_price = current_price
-                buy_price_origin = current_price
-                kkk = 0
-            elif (state_sum >= 6 and rate_sum > 0):
+            if (buy_state == 1):
                 if cash > 105000:
                     krw = 100000
                     btc = btc + (0.9995*krw/current_price) 
@@ -87,10 +82,9 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, lo
                 buy_price_origin = current_price
                 kkk = 0
             else:
-                if cash > 10000:
-                    krw = 10000
-                    btc = btc + (0.9995*krw/current_price) 
-                    cash = cash - krw
+                krw = 0
+                btc = btc + (0.9995*krw/current_price) 
+                cash = cash - krw
                 state = 1
                 buy_price = current_price
                 buy_price_origin = current_price
@@ -126,17 +120,17 @@ def strategy(ticker, kkk, hhh, state, buy_price, low_mean, high_min, low_min, lo
 
     # Rate Calculation
     if (state == 1):
-        rate_temp = 100*(current_price - buy_price_origin)/buy_price_origin
-        if (rate_temp > 0):
-            rate = 1
-        elif (rate_temp < 0):
-            rate = -1
-        else:
-            rate = 0
+        rate = 100*(current_price - buy_price_origin)/buy_price_origin
+        # if (rate_temp > 0):
+        #     rate = 1
+        # elif (rate_temp < 0):
+        #     rate = -1
+        # else:
+        #     rate = 0
     else:
         rate = 0
 
-    return kkk, hhh, state, buy_price, current_price, cash, btc, buy_price_origin, rate 
+    return kkk, hhh, state, buy_price, current_price, cash, btc, buy_price_origin, rate
 
 # Initial flag setting
 
@@ -152,7 +146,7 @@ now = Time()
 
 now.year = 2022
 now.month = 2
-now.day = 1
+now.day = 15
 now.hour = 0
 now.minute = 0
 
@@ -167,7 +161,7 @@ ini_flag = 0
 
 # Autotrading Start
 print("Sim Start")
-while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
+while (not (now.year == 2022 and now.month == 2 and now.day == 29)):
 
     if (now.month <= 9):
         load_day = str(now.year) + '0' + str(now.month)
@@ -223,11 +217,15 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
         buy_price_origin = np.zeros(coin_num)
         rate = np.zeros(coin_num)
         rate_sum = 0
+        buy_state = 0
         for i in range(1,coin_num+1):
             low_mean[i-1], high_min[i-1], low_min[i-1] = update_1hour(ticker_list[i-1], load_day)
         update_flag = 1
         ini_flag = 1
         print("Initializing: ", now.hour,'/',now.minute)
+
+    if (state_sum == 0):
+        rate_accu = 0
 
     # Time Update
     if (now.minute != minute_pre):
@@ -250,12 +248,15 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
     
     for i in range(1,coin_num+1):
         time.sleep(0.1)
-        kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], current_price[i-1], cash, btc[i-1], buy_price_origin[i-1], rate[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], low_mean[i-1], high_min[i-1], low_min[i-1],load_day, cash, btc[i-1], buy_price_origin[i-1], rate[i-1], rate_sum, state_sum)
+        kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], current_price[i-1], cash, btc[i-1], buy_price_origin[i-1], rate[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], load_day, cash, btc[i-1], buy_price_origin[i-1], buy_state)
 
     rate_sum_temp = 0    
     for i in range(1,coin_num+1):
         rate_sum_temp = rate_sum_temp + rate[i-1]
-    rate_sum = rate_sum_temp
+    if (state_sum == 0):
+        rate_sum = 0
+    else:
+        rate_sum = rate_sum_temp/state_sum
     
     # Print
     minute_pre = now.minute
@@ -293,4 +294,12 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
     for i in range(1,coin_num+1):
         state_sum = state_sum + state[i-1]
 
-    print('Now Time:', now.month, '.', now.day, '.', now.hour, '/ cash:', cash + cash_temp, '/ state:', state_sum, '/ coin num:', coin_num, '/ rate sum:', rate_sum)
+    rate_accu = rate_accu + rate_sum
+    
+    if (rate_accu > 2.0 and buy_state == 0):
+        buy_state = 1
+    elif (rate_accu < 0.0 and buy_state == 1):
+        buy_state = 0
+
+    print('Now Time:', now.month, '.', now.day, '.', now.hour, '/ cash:', cash + cash_temp, '/ state:', state_sum, '/ coin num:', coin_num, '/ rate sum:', rate_sum, '/ rate accu:', rate_accu)
+    print('-----------------------------------------')

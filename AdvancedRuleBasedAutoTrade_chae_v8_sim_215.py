@@ -152,7 +152,7 @@ now = Time()
 
 now.year = 2022
 now.month = 2
-now.day = 1
+now.day = 15
 now.hour = 0
 now.minute = 0
 
@@ -167,7 +167,7 @@ ini_flag = 0
 
 # Autotrading Start
 print("Sim Start")
-while (not (now.year == 2022 and now.month == 2 and now.day == 15)):
+while (not (now.year == 2022 and now.month == 2 and now.day == 29)):
 
     if (now.month <= 9):
         load_day = str(now.year) + '0' + str(now.month)
