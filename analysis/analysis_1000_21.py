@@ -253,10 +253,7 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 29)):
     if (now.minute != minute_pre):
         for i in range(1,coin_num+1):
             kkk[i-1] = kkk[i-1] + minute_interval
-        
-    if (now.hour != hour_pre):
-        for i in range(1,coin_num+1):
-            hhh[i-1] = hhh[i-1] + 1
+
             price_ratio[i-1], price_cnt[i-1], market_price[i-1] = market_manager(ticker_list[i-1], market_price[i-1], load_day)
 
         price_ratio_sum = 0
@@ -267,7 +264,10 @@ while (not (now.year == 2022 and now.month == 2 and now.day == 29)):
 
         price_ratio_accu = price_ratio_accu + price_ratio_sum
         price_cnt_accu = price_cnt_accu + price_cnt_sum
-
+        
+    if (now.hour != hour_pre):
+        for i in range(1,coin_num+1):
+            hhh[i-1] = hhh[i-1] + 1
 
     if (now.day != day_pre):
         ini_flag = 0
