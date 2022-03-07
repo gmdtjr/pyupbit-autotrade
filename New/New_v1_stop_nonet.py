@@ -119,14 +119,17 @@ def market_manager(ticker, market_price, load_day):
 
     return price_ratio, price_cnt, market_price
 
-def strategy(ticker, kkk, hhh, state, buy_price, buy_price_origin, low_mean, high_min, low_min, load_day, cash, btc, stop_flag, net_sum):
+def strategy(ticker, kkk, hhh, state, buy_price, buy_price_origin, low_mean, high_min, low_min, load_day, cash, btc, stop_flag, buy_value, active_state):
 
     current_price = get_current_price(ticker, load_day)
-    buy_value = get_buy_value(ticker, load_day)
+    
+    if (active_state == 0):
+        buy_value = 0
+
     net = -1000
     # Buy Strategy
     if (state == 0 and hhh >= 1 and stop_flag == 0):
-        if (current_price < low_mean and current_price > high_min and active_state == 1 and buy_value != 0):
+        if (current_price < low_mean and current_price > high_min):
             if cash > buy_value + 5000:
                 krw = buy_value
                 btc = btc + (0.9995*krw/current_price) 
@@ -249,6 +252,7 @@ ticker_list = coin_list_valid
 state = np.zeros(coin_num)
 buy_price = np.zeros(coin_num)
 buy_price_origin = np.zeros(coin_num)
+buy_value = np.zeros(coin_num)
 kkk = np.zeros(coin_num)
 current_price = np.zeros(coin_num)
 low_mean = np.zeros(coin_num)
@@ -275,6 +279,11 @@ net5 = np.zeros(coin_num)
 net_sum = np.zeros(coin_num)
 active_state = np.zeros(coin_num)
 
+for i in range(1,coin_num+1):
+    time.sleep(0.1)
+    low_mean[i-1], high_min[i-1], low_min[i-1] = update_1hour(ticker_list[i-1], load_day)
+    buy_value[i-1] = get_buy_value(ticker_list[i-1], load_day)
+update_flag = 1
 # Autotrading Start
 print("Sim Start")
 while (1):
@@ -343,6 +352,7 @@ while (1):
         for i in range(1,coin_num+1):
             time.sleep(0.1)
             low_mean[i-1], high_min[i-1], low_min[i-1] = update_1hour(ticker_list[i-1], load_day)
+            buy_value[i-1] = get_buy_value(ticker_list[i-1], load_day)
         update_flag = 1
     elif (now.minute <= 30 and update_flag == 1):
         update_flag = 1
@@ -355,12 +365,12 @@ while (1):
         stop_flag = 1
     if (price_cnt_accu_sum >= 0.1 and stop_flag == 1):
         stop_flag = 0
+
     ## Strategy
     for i in range(1,coin_num+1):
-        active_state[i-1] = 1
         time.sleep(0.1)
         net_temp = -1000
-        kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], current_price[i-1], net_temp, cash, btc[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], load_day, cash, btc[i-1], stop_flag, active_state[i-1])
+        kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], current_price[i-1], net_temp, cash, btc[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], load_day, cash, btc[i-1], stop_flag, buy_value[i-1], active_state[i-1])
 
         if (net_temp != -1000):
             net1[i-1] = net_temp
@@ -374,6 +384,7 @@ while (1):
             active_state[i-1] = 1
         else:
             active_state[i-1] = 0
+        active_state[i-1] = 1
 
     # Print
     minute_pre = now.minute
