@@ -11,7 +11,6 @@ minute_interval = 1
 def get_current_price(ticker, load_day):
     #"""Current Price Check"""
     while(1):
-        time.sleep(0.1)
         df_m = pyupbit.get_ohlcv(ticker, interval="minute1", count = 1, to=load_day) ## 1분 단위
         if (not df_m is None):
             break
@@ -24,11 +23,48 @@ def get_current_price(ticker, load_day):
     
     return current_price
 
+def get_buy_value(ticker, load_day):
+
+    gain = 50
+    while(1):
+        df_m = pyupbit.get_ohlcv('KRW-BTC', interval="minute60", count = 2) ## 1분 단위
+        if (not df_m is None):
+            break
+
+    if (not df_m is None):
+        current_value = float(df_m['value'][0])/60
+    else:
+        current_value = 0
+        print('fail')
+
+    if (current_value > 500000 * gain):
+        buy_value = 500000
+    elif (current_value > 400000 * gain):
+        buy_value = 400000
+    elif (current_value > 300000 * gain):
+        buy_value = 300000
+    elif (current_value > 200000 * gain):
+        buy_value = 200000
+    elif (current_value > 100000 * gain):
+        buy_value = 100000
+    else:
+        buy_value = 0
+    
+    return buy_value
+
+    while(1):  
+        df_m = pyupbit.get_ohlcv(coin_list[i-1], interval="day", count = 2, to = load_day)
+        if (not df_m is None):
+            break
+    if (not df_m is None):
+        if (float(df_m['close'][0]) > 500):
+            coin_list_valid.append(coin_list[i-1])
+
+
 def update_1hour(ticker, load_day):
 
     # Data Loading
     while(1):
-        time.sleep(0.1)
         df = pyupbit.get_ohlcv(ticker, interval="minute60", count = 25, to=load_day) ## 1시간 단위  
         if (not df is None):
             break
@@ -83,16 +119,15 @@ def market_manager(ticker, market_price, load_day):
 
     return price_ratio, price_cnt, market_price
 
-def strategy(ticker, kkk, hhh, state, buy_price, buy_price_origin, low_mean, high_min, low_min, load_day, cash, btc, stop_flag):
+def strategy(ticker, kkk, hhh, state, buy_price, buy_price_origin, low_mean, high_min, low_min, load_day, cash, btc):
 
     current_price = get_current_price(ticker, load_day)
-
-    buy_value = 1000000
+    
     net = -1000
-    stop_flag = 0
+    buy_value = 1000000
+    # Buy Strategy
     if (current_price != 0 and low_mean != 0):
-        # Buy Strategy
-        if (state == 0 and hhh >= 1 and stop_flag == 0):
+        if (state == 0 and hhh >= 1):
             if (current_price < low_mean and current_price > high_min):
                 if cash > buy_value + 5000:
                     krw = buy_value
@@ -137,11 +172,6 @@ def strategy(ticker, kkk, hhh, state, buy_price, buy_price_origin, low_mean, hig
                 hhh = 0
                 net = 100*(current_price - buy_price_origin)/buy_price_origin
 
-            if (stop_flag == 1):
-                cash = cash + (0.9995*btc*current_price) 
-                btc = 0
-                net = 100*(current_price - buy_price_origin)/buy_price_origin
-
     return kkk, hhh, state, buy_price, buy_price_origin, current_price, net, cash, btc
 
 # Initial flag setting
@@ -157,7 +187,7 @@ class Time:
 now = Time()
 
 now.year = 2022
-now.month = 3
+now.month = 2
 now.day = 1
 now.hour = 0
 now.minute = 0
@@ -200,20 +230,8 @@ else:
 load_day = load_day + ':00'
 
 coin_list = pyupbit.get_tickers(fiat="KRW")
-coin_list_valid = []
-for i in range(1,len(coin_list)):
-    time.sleep(0.1)
-    while(1):  
-        time.sleep(0.1)  
-        df_m = pyupbit.get_ohlcv(coin_list[i-1], interval="minute60", count = 2, to = load_day)
-        if (not df_m is None):
-            break
-    if (not df_m is None):
-        if (float(df_m['close'][0]) > 500 and float(df_m['value'][0])/60 > 100000000):
-            coin_list_valid.append(coin_list[i-1])
+coin_list_valid = ["KRW-BTC"]
 
-print(coin_list_valid)
-print(len(coin_list_valid))
 coin_num = len(coin_list_valid)
 ticker_list = coin_list_valid
 state = np.zeros(coin_num)
@@ -227,28 +245,21 @@ high_min = np.zeros(coin_num)
 low_min = np.zeros(coin_num)
 hhh = np.ones(coin_num)
 btc = np.zeros(coin_num)
+update_flag = 1
+ini_flag = 1
+net_sum = 0
+print("Initializing: ", now.hour,'/',now.minute)
+
+krw_save = []
+state_save = []
+
 for i in range(1,coin_num+1):
     time.sleep(0.1)
     low_mean[i-1], high_min[i-1], low_min[i-1] = update_1hour(ticker_list[i-1], load_day)
 update_flag = 1
-ini_flag = 1
-print("Initializing: ", now.hour,'/',now.minute)
-
-price_ratio = np.zeros(coin_num)
-price_cnt = np.zeros(coin_num)
-market_price = np.zeros(coin_num)
-price_ratio_sum = 0
-price_cnt_accu = np.zeros(10)
-price_cnt_accu_sum = 0
-stop_flag = 0
-net_sum = 0
-
-
-krw_save = []
-state_save = []
 # Autotrading Start
 print("Sim Start")
-while (not (now.year == 2022 and now.month == 3 and now.day == 14)):
+while (not (now.year == 2022 and now.month == 3 and now.day == 1)):
 
     if (now.month <= 9):
         load_day = str(now.year) + '0' + str(now.month)
@@ -281,69 +292,12 @@ while (not (now.year == 2022 and now.month == 3 and now.day == 14)):
         for i in range(1,coin_num+1):
             kkk[i-1] = kkk[i-1] + minute_interval
             time.sleep(0.1)
-            price_ratio[i-1], price_cnt[i-1], market_price[i-1] = market_manager(ticker_list[i-1], market_price[i-1], load_day)
-
-        price_ratio_sum = 0
-        for i in range(1,coin_num+1):
-            price_ratio_sum = price_ratio_sum + price_ratio[i-1]
-
-        price_ratio_sum = price_ratio_sum/coin_num
-
-        price_cnt_accu[0] = price_ratio_sum
-        price_cnt_accu[1] = price_cnt_accu[0]
-        price_cnt_accu[2] = price_cnt_accu[1]
-        price_cnt_accu[3] = price_cnt_accu[2]
-        price_cnt_accu[4] = price_cnt_accu[3]
-        price_cnt_accu[5] = price_cnt_accu[4]
-        price_cnt_accu[6] = price_cnt_accu[5]
-        price_cnt_accu[7] = price_cnt_accu[6]
-        price_cnt_accu[8] = price_cnt_accu[7]
-        price_cnt_accu[9] = price_cnt_accu[8]
-
-        for i in range(1,10+1):
-            price_cnt_accu_sum = price_cnt_accu[i-1]
 
     if (now.hour != hour_pre):
         for i in range(1,coin_num+1):
             hhh[i-1] = hhh[i-1] + 1
 
-        if (state_sum == 0 and ini_flag == 0):
-            coin_list = pyupbit.get_tickers(fiat="KRW")
-            coin_list_valid = []
-            for i in range(1,len(coin_list)):
-                time.sleep(0.1)
-                while(1):    
-                    time.sleep(0.1)
-                    df_m = pyupbit.get_ohlcv(coin_list[i-1], interval="minute60", count = 2, to = load_day)
-                    if (not df_m is None):
-                        break
-                if (not df_m is None):
-                    if (float(df_m['close'][0]) > 500 and float(df_m['value'][0])/60 > 100000000):
-                        coin_list_valid.append(coin_list[i-1])
-
-            print(coin_list_valid)
-            print(len(coin_list_valid))
-            coin_num = len(coin_list_valid)
-            ticker_list = coin_list_valid
-            state = np.zeros(coin_num)
-            buy_price = np.zeros(coin_num)
-            buy_price_origin = np.zeros(coin_num)
-            buy_value = np.zeros(coin_num)
-            kkk = np.zeros(coin_num)
-            current_price = np.zeros(coin_num)
-            low_mean = np.zeros(coin_num)
-            high_min = np.zeros(coin_num)
-            low_min = np.zeros(coin_num)
-            hhh = np.ones(coin_num)
-            btc = np.zeros(coin_num)
-            for i in range(1,coin_num+1):
-                time.sleep(0.1)
-                low_mean[i-1], high_min[i-1], low_min[i-1] = update_1hour(ticker_list[i-1], load_day)
-            update_flag = 1
-            print("Initializing: ", now.hour,'/',now.minute)
-            ini_flag = 1
-
-    if (now.hour != hour_pre):
+    if (now.day != day_pre):
         ini_flag = 0
 
     if (now.minute <= 30 and update_flag == 0):
@@ -356,22 +310,14 @@ while (not (now.year == 2022 and now.month == 3 and now.day == 14)):
     else:
         update_flag = 0
 
-
-    ## Stop Flag
-    if (price_cnt_accu_sum <= -0.2 and stop_flag == 0):
-        stop_flag = 1
-    if (price_cnt_accu_sum >= 0.1 and stop_flag == 1):
-        stop_flag = 0
-    
     ## Strategy
     for i in range(1,coin_num+1):
         time.sleep(0.1)
         net_temp = -1000
-        kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], current_price[i-1], net_temp, cash, btc[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], load_day, cash, btc[i-1], stop_flag)
+        kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], current_price[i-1], net_temp, cash, btc[i-1] = strategy(ticker_list[i-1], kkk[i-1], hhh[i-1], state[i-1], buy_price[i-1], buy_price_origin[i-1], low_mean[i-1], high_min[i-1], low_min[i-1], load_day, cash, btc[i-1])
 
         if (net_temp != -1000):
             net_sum = net_sum + net_temp
-
 
     # Print
     minute_pre = now.minute
@@ -409,10 +355,11 @@ while (not (now.year == 2022 and now.month == 3 and now.day == 14)):
     for i in range(1,coin_num+1):
         state_sum = state_sum + state[i-1]
 
-    print('Now Time:', now.month, '.', now.day, '.', now.hour, '.', now.minute, '/ cash:', cash + cash_temp, '/ state:', state_sum, '/ net:', net_sum, '/ price_cnt_sum', price_cnt_accu_sum)
+    print('Now Time:', now.month, '.', now.day, '.', now.hour, '.', now.minute, '/ cash:', cash + cash_temp, '/ state:', state_sum, '/ net:', net_sum)
 
     krw_save.append(cash + cash_temp)
     state_save.append(state_sum)
+
 
 figure_num = 1
 import matplotlib.pyplot as plt
