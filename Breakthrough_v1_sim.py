@@ -3,7 +3,6 @@ from os import lseek
 import time
 import pyupbit
 import datetime
-import schedule
 import numpy as np
 import math
 from time import sleep
@@ -51,18 +50,17 @@ def strategy(ticker, cp, state, close, range_val, pattern, buy_val, bp, tp_range
     k = 0.5
 
     if (state == 0 and cp <= close - k*(range_val) and pattern == 2 and buy_val > 0):
+        buy_val = min(buy_val, 1000000)
         if cash > buy_val:
             krw = buy_val
             btc = btc + (0.9995*krw/cp) 
             cash = cash - krw
-            state = 1
-            bp = cp
         elif cash <= buy_val and cash > 10000:
             krw = cash
             btc = btc + (0.9995*krw/cp) 
             cash = cash - krw
-            state = 1
-            bp = cp
+        state = 1
+        bp = cp
         tp_range = k*(range_val)
         
     elif (state == 1):
@@ -118,7 +116,7 @@ close = np.zeros(coin_num)
 range_val = np.zeros(coin_num)
 range_pattern = np.zeros(coin_num)
 buy_val = np.zeros(coin_num)
-kkk = 0
+kkk = np.zeros(coin_num)
 btc = np.zeros(coin_num)
 
 day_pre = now.day
@@ -196,6 +194,7 @@ while (not (now.year == 2022 and now.month == 3 and now.day == 18)):
                         valid[i-1] = 1
                     else:
                         valid[i-1] = 0
+                        kkk[i-1] = 0
         ini_flag = 1
 
     ## Current price update
@@ -234,13 +233,12 @@ while (not (now.year == 2022 and now.month == 3 and now.day == 18)):
                         range_pattern[i-1] = 2
                     range_val[i-1] = high[i-1] - low[i-1]
                     update_flag[i-1] == 0
-                    kkk = kkk + 1
+                    kkk[i-1] = kkk[i-1] + 1
 
     # Strategy Planning
-    if (kkk > 0):
-        if (valid[i-1] == 1):
-            for i in range(1,coin_num+1):
-                state[i-1], bp[i-1], tp_range[i-1], cash, btc[i-1] = strategy(ticker_list[i-1], cp[i-1], state[i-1], close[i-1], range_val[i-1], range_pattern[i-1], buy_val[i-1], bp[i-1], tp_range[i-1], cash, btc[i-1])
+    for i in range(1,coin_num+1):
+        if (valid[i-1] == 1 and kkk[i-1] > 0):
+            state[i-1], bp[i-1], tp_range[i-1], cash, btc[i-1] = strategy(ticker_list[i-1], cp[i-1], state[i-1], close[i-1], range_val[i-1], range_pattern[i-1], buy_val[i-1], bp[i-1], tp_range[i-1], cash, btc[i-1])
         
     # State Sum
     state_sum = 0
