@@ -26,7 +26,7 @@ def get_current_price(ticker, load_day):
 
 def buy_val_update(ticker, load_day):
 
-    gain = 100
+    gain = 20
 
     # Data Loading
     for i in range(1,10):
@@ -232,7 +232,7 @@ while (not (now.year == 2022 and now.month == 3 and now.day == 18)):
                     else:
                         range_pattern[i-1] = 2
                     range_val[i-1] = high[i-1] - low[i-1]
-                    update_flag[i-1] == 0
+                    update_flag[i-1] = 0
                     kkk[i-1] = kkk[i-1] + 1
 
     # Strategy Planning
