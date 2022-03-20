@@ -26,7 +26,7 @@ def get_current_price(ticker, load_day):
 
 def buy_val_update(ticker, load_day):
 
-    gain = 20
+    gain = 100
 
     # Data Loading
     for i in range(1,10):
