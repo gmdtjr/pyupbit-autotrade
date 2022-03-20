@@ -219,11 +219,11 @@ while (not (now.year == 2022 and now.month == 3 and now.day == 18)):
                 
                 if (high[i-1] <= cp[i-1]):
                     high[i-1] = cp[i-1]
-                    high_t[i-1] = now.minute + now.second/60
+                    high_t[i-1] = now.minute
 
                 if (low[i-1] >= cp[i-1]):
                     low[i-1] = cp[i-1]
-                    low_t[i-1] = now.minute + now.second/60
+                    low_t[i-1] = now.minute
 
                 if (now.minute >= 59):
                     close[i-1] = cp[i-1]
