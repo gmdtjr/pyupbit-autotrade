@@ -78,8 +78,8 @@ past_price = np.zeros(200)
 for i in range(0,coin_num):
     now_current = now
     now_current.year = 2022
-    now_current.month = 2
-    now_current.day = 28
+    now_current.month = 1
+    now_current.day = 31
     now_current.hour = 23
     now_current.minute = 59
     ##now_current = datetime.datetime.now()
